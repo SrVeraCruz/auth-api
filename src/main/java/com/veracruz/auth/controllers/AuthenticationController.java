@@ -1,8 +1,7 @@
 package com.veracruz.auth.controllers;
 
-import com.veracruz.auth.domain.user.AuthenticationDTO;
-import com.veracruz.auth.domain.user.RegisterDTO;
-import com.veracruz.auth.domain.user.UserResponseDTO;
+import com.veracruz.auth.domain.user.*;
+import com.veracruz.auth.infra.security.TokenService;
 import com.veracruz.auth.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,13 +19,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthenticationController {
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
+    private final TokenService tokenService;
 
     @PostMapping("/login")
-    public ResponseEntity login(@RequestBody @Valid AuthenticationDTO data) {
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid AuthenticationDTO data) {
         var usernamePassword = new UsernamePasswordAuthenticationToken(data.email(),data.password());
         var auth = this.authenticationManager.authenticate(usernamePassword);
 
-        return ResponseEntity.ok().build();
+        String token = this.tokenService.generateToken((User) auth.getPrincipal());
+        return ResponseEntity.ok(new LoginResponseDTO(token));
     }
 
     @PostMapping("/register")
